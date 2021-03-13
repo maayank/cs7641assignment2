@@ -22,7 +22,7 @@ array([[  25.,  402.],
        [  30., 3219.],
        [  30., 3420.]])
 '''
-def evaluate_algorithm(alg_name, f_name, best_state, best_fitness, curve, callback_calls):
+def evaluate_algorithm(alg_name, f_name, best_state, best_fitness, curve):
     # I want to print 2 graphs here - fitness as function of iterations and fitness as function of fitness func calls
     fitness_by_iterations = [c[0] for c in curve]
     fevals_by_iterations = [c[1] for c in curve]
@@ -41,5 +41,40 @@ def evaluate_algorithm(alg_name, f_name, best_state, best_fitness, curve, callba
     axes[1].plot(fevals_by_iterations, fitness_by_iterations, label='Fitness evaluations', color='g')
     axes[1].legend(loc="best")
 
-    plt.show()
-    quit()
+def normalize(arr, set_max=None):
+    arr = np.asarray(arr)
+    if set_max is None:
+        arr -= arr.min()
+        arr /= arr.max()
+    else:
+        arr /= set_max
+    return arr
+
+def savefig(name):
+    plt.savefig(f'pics/comparison_{name}.png', dpi=200, bbox_inches='tight')
+
+def agg_evaluate_algorithm(f_name, alg2curve, set_max):
+    plt.clf()
+    fig, axes = plt.subplots(1, 2, figsize=(20, 5))
+    axes[0].set_xlabel("Iterations%")
+    axes[0].set_ylabel("Fitness%")
+    axes[0].grid()
+
+    axes[1].set_xlabel("Fevals%")
+    axes[1].set_ylabel("Fitness%")
+    axes[1].grid()
+
+    for alg, curve in alg2curve.items():
+        fitness_by_iterations = normalize([c[0] for c in curve], set_max)
+        fevals_by_iterations = normalize([c[1] for c in curve])
+
+        iterations = normalize(list(map(float, range(len(curve)))))
+
+        axes[0].plot(iterations, fitness_by_iterations, label=alg)
+        axes[1].plot(fevals_by_iterations, fitness_by_iterations, label=alg)
+
+
+    axes[0].legend(loc="best")
+    axes[1].legend(loc="best")
+    fig.suptitle(f'Comparison of normalized characteristics for {f_name}')
+    savefig(f_name)
