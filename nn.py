@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 
+from alg_eval import agg_evaluate_algorithm
+from copy import deepcopy
+
 SCORING = 'f1'
 
 class NNExperiment:
@@ -19,6 +22,7 @@ class NNExperiment:
 
     def reset(self, name, estimator):
         self.estimator = estimator
+        self.original_estimator = estimator
         self.estimator = make_pipeline(StandardScaler(), self.estimator)
         self.name = name
 
@@ -29,6 +33,13 @@ class NNExperiment:
     def _save_fig(self, name):
         plt.savefig(f'pics/{name}_{self.name}.png', dpi=200, bbox_inches='tight')
     
+    def make_fitness_curve(self):
+        np.random.seed(42)
+        plt.clf()
+        result = self.estimator.fit(self.training_X, self.training_y)
+        loss_and_fevals = self.original_estimator.fitness_curve
+        return loss_and_fevals
+
     def make_learning_curve(self):
         np.random.seed(42)
         plt.clf()
@@ -43,6 +54,8 @@ class NNExperiment:
         fit_times_std = np.std(fit_times, axis=1)
         score_times_mean = np.mean(score_times, axis=1)
         score_times_std = np.std(score_times, axis=1)
+
+        print(f'{self.name}: {train_scores_mean[-1]}, {test_scores_mean[-1]}')
 
         _, axes = plt.subplots(1, 2, figsize=(20, 5))
 #        axes[0].set_ylim(.7, 1.01)
@@ -88,10 +101,24 @@ class NNExperiment:
 
 def eval_nn():
     exp = NNExperiment()
+    alg2curve = {}
+    max_loss = -1
     for alg in ['random_hill_climb', 'simulated_annealing', 'gradient_descent', 'genetic_alg']:
         nn = mlrose.NeuralNetwork(hidden_nodes=[10], algorithm=alg, curve=True, random_state=42, clip_max=5, learning_rate=0.0001 if alg=='gradient_descent' else 0.1, early_stopping=True, max_iters=1000, max_attempts=50, pop_size=10)
         exp.reset(alg, nn)
         exp.make_learning_curve()
+        curve = exp.make_fitness_curve()
+        if alg == 'gradient_descent':
+            curve = [[abs(c), float(i)] for i, c in enumerate(curve)]
+        for c in curve:
+            try:
+                if c[0] > max_loss:
+                    max_loss = c[0]
+            except:
+                print(c)
+                raise
+        alg2curve[alg] = deepcopy(curve)
+    agg_evaluate_algorithm('nn', alg2curve, max_loss, True)
 
 if __name__=='__main__':
     eval_nn()

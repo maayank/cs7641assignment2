@@ -43,30 +43,39 @@ def evaluate_algorithm(alg_name, f_name, best_state, best_fitness, curve):
 
 def normalize(arr, set_max=None):
     arr = np.asarray(arr)
-    if set_max is None:
-        arr -= arr.min()
-        arr /= arr.max()
-    else:
-        arr /= set_max
+    try:
+        if set_max is None:
+            arr -= arr.min()
+            arr /= arr.max()
+        else:
+            arr /= set_max
+    except:
+        print(arr)
+        raise
     return arr
 
 def savefig(name):
     plt.savefig(f'pics/comparison_{name}.png', dpi=200, bbox_inches='tight')
 
-def agg_evaluate_algorithm(f_name, alg2curve, set_max):
+def agg_evaluate_algorithm(f_name, alg2curve, set_max, is_nn=False):
     plt.clf()
     fig, axes = plt.subplots(1, 2, figsize=(20, 5))
+    ylabel = 'Loss' if is_nn else 'Fitness'
     axes[0].set_xlabel("Iterations%")
-    axes[0].set_ylabel("Fitness%")
+    axes[0].set_ylabel(f"{ylabel}%")
     axes[0].grid()
 
     axes[1].set_xlabel("Fevals%")
-    axes[1].set_ylabel("Fitness%")
+    axes[1].set_ylabel(f"{ylabel}%")
     axes[1].grid()
 
     for alg, curve in alg2curve.items():
-        fitness_by_iterations = normalize([c[0] for c in curve], set_max)
-        fevals_by_iterations = normalize([c[1] for c in curve])
+        try:
+            fitness_by_iterations = normalize([c[0] for c in curve], set_max)
+            fevals_by_iterations = normalize([c[1] for c in curve])
+        except:
+            print(curve)
+            raise
 
         iterations = normalize(list(map(float, range(len(curve)))))
 
@@ -76,5 +85,8 @@ def agg_evaluate_algorithm(f_name, alg2curve, set_max):
 
     axes[0].legend(loc="best")
     axes[1].legend(loc="best")
-    fig.suptitle(f'Comparison of normalized characteristics for {f_name}')
+    title_name = f_name
+    if is_nn:
+        title_name = "NN optimisation"
+    fig.suptitle(f'Comparison of normalized characteristics for {title_name}')
     savefig(f_name)

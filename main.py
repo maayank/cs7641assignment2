@@ -79,11 +79,9 @@ def is_larger2(state):
     return count
 
 def path(state):
-    if len(state) < PROBLEM_LENGTH:
-        state = [0] * (PROBLEM_LENGTH-len(state)) + state
-    state = [-1 if i == 0 else 1 for i in state]
-    s = abs(sum(state))
-    return PROBLEM_LENGTH - s
+    if foo(state) > (2 ** (len(state)-1)):
+        return 100
+    return 0
 
 def cf2(state):
     score = 0
@@ -92,13 +90,13 @@ def cf2(state):
     return score
 
 FITNESS_FUNCS = {
-    'flipflop': mlrose.FlipFlop(),
     'fourpeaks': mlrose.FourPeaks(),
+    'onemax': mlrose.OneMax(),
+#    'path': mlrose.CustomFitness(path, problem_type='discrete'),
+    'flipflop': mlrose.FlipFlop(),
 #    'cliffs': mlrose.CustomFitness(cf1, problem_type='discrete'),
 #    'cliffs': mlrose.CustomFitness(is_larger, problem_type='discrete'),
-#    'cliffs': mlrose.CustomFitness(path, problem_type='discrete'),
-#    'onemax': mlrose.OneMax(),
-    'max2color': mlrose.MaxKColorGenerator.generate(seed=42, number_of_nodes=PROBLEM_LENGTH, max_colors=2),
+#    'max2color': mlrose.MaxKColorGenerator.generate(seed=42, number_of_nodes=PROBLEM_LENGTH, max_colors=2),
 #    'mod': mlrose.CustomFitness(cf2, problem_type='discrete')
 }
 
